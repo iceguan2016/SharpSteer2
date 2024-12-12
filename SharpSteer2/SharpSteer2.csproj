@@ -62,7 +62,13 @@
     <Compile Include="IVehicle.cs" />
     <Compile Include="LocalSpace.cs" />
     <Compile Include="NullAnnotationService.cs" />
+    <Compile Include="Obstacles\BoxObstacle.cs" />
     <Compile Include="Obstacles\IObstacle.cs" />
+    <Compile Include="Obstacles\LocalSpaceObstacle.cs" />
+    <Compile Include="Obstacles\Obstacle.cs" />
+    <Compile Include="Obstacles\ObstacleGroup.cs" />
+    <Compile Include="Obstacles\PlaneObstacle.cs" />
+    <Compile Include="Obstacles\RectangleObstacle.cs" />
     <Compile Include="Obstacles\SphericalObstacle.cs" />
     <Compile Include="Pathway\GatewayPathway.cs" />
     <Compile Include="Pathway\IPathway.cs" />
