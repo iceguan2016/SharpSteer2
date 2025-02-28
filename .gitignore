@@ -17,3 +17,8 @@ SharpSteer2.WinDemoContent/obj
 SharpSteer2.Tests/bin
 SharpSteer2.Tests/obj
 _Resharper.*
+.vs
+Demo/.vs/Demo.csproj.dtbcache.json
+SharpSteer2.Tests/.vs/
+SharpSteer2/.vs
+UpgradeLog.htm
