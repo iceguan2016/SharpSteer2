@@ -16,11 +16,11 @@ namespace SharpSteer2
 {
 	public class SimpleVehicle : SteerLibrary
 	{
-	    Vector3 _lastForward;
-        Vector3 _lastPosition;
-		float _smoothedCurvature;
+	    FixMath.F64Vec3 _lastForward;
+        FixMath.F64Vec3 _lastPosition;
+		FixMath.F64 _smoothedCurvature;
 		// The acceleration is smoothed
-        Vector3 _acceleration;
+        FixMath.F64Vec3 _acceleration;
 
 		public SimpleVehicle(IAnnotationService annotations = null)
             : base(annotations)
@@ -35,7 +35,7 @@ namespace SharpSteer2
 			// reset LocalSpace state
 			ResetLocalSpace();
 
-			Mass = 1;          // Mass (defaults to 1 so acceleration=force)
+			Mass = FixMath.F64.One;          // Mass (defaults to 1 so acceleration=force)
 			Speed = 0;         // speed along Forward direction.
 
 			Radius = 0.5f;     // size of bounding sphere
@@ -48,10 +48,10 @@ namespace SharpSteer2
 
 		// get/set Mass
         // Mass (defaults to unity so acceleration=force)
-	    public override float Mass { get; set; }
+	    public override FixMath.F64 Mass { get; set; }
 
 	    // get velocity of vehicle
-        public override Vector3 Velocity
+        public override FixMath.F64Vec3 Velocity
 		{
 			get { return Forward * Speed; }
 		}
@@ -59,45 +59,47 @@ namespace SharpSteer2
 		// get/set speed of vehicle  (may be faster than taking mag of velocity)
         // speed along Forward direction. Because local space is
         // velocity-aligned, velocity = Forward * Speed
-	    public override float Speed { get; set; }
+	    public override FixMath.F64 Speed { get; set; }
 
 	    // size of bounding sphere, for obstacle avoidance, etc.
-	    public override float Radius { get; set; }
+	    public override FixMath.F64 Radius { get; set; }
 
 	    // get/set maxForce
         // the maximum steering force this vehicle can apply
         // (steering force is clipped to this magnitude)
-        public override float MaxForce
+		static FixMath.F64 DefaultMaxForce = FixMath.F64.FromFloat(0.1f);
+        public override FixMath.F64 MaxForce
         {
-            get { return 0.1f; }
+            get { return DefaultMaxForce; }
         }
 
 	    // get/set maxSpeed
         // the maximum speed this vehicle is allowed to move
         // (velocity is clipped to this magnitude)
-	    public override float MaxSpeed
+		static FixMath.F64 DefaultMaxSpeed = FixMath.F64.FromFloat(1.0f);
+	    public override FixMath.F64 MaxSpeed
 	    {
-	        get { return 1; }
+	        get { return DefaultMaxSpeed; }
 	    }
 
 	    // apply a given steering force to our momentum,
 		// adjusting our orientation to maintain velocity-alignment.
-	    public void ApplySteeringForce(Vector3 force, float elapsedTime)
+	    public void ApplySteeringForce(FixMath.F64Vec3 force, FixMath.F64 elapsedTime)
 		{
-			Vector3 adjustedForce = AdjustRawSteeringForce(force, elapsedTime);
+			var adjustedForce = AdjustRawSteeringForce(force, elapsedTime);
 
 			// enforce limit on magnitude of steering force
-            Vector3 clippedForce = adjustedForce.TruncateLength(MaxForce);
+            var clippedForce = adjustedForce.TruncateLength(MaxForce);
 
 			// compute acceleration and velocity
-			Vector3 newAcceleration = (clippedForce / Mass);
-			Vector3 newVelocity = Velocity;
+			var newAcceleration = (clippedForce / Mass);
+			var newVelocity = Velocity;
 
 			// damp out abrupt changes and oscillations in steering acceleration
 			// (rate is proportional to time step, then clipped into useful range)
 			if (elapsedTime > 0)
 			{
-                float smoothRate = Utilities.Clamp(9 * elapsedTime, 0.15f, 0.4f);
+                var smoothRate = Utilities.Clamp(FixMath.F64.FromInt(9) * elapsedTime, FixMath.F64.FromFloat(0.15f), FixMath.F64.FromFloat(0.4f));
 				Utilities.BlendIntoAccumulator(smoothRate, newAcceleration, ref _acceleration);
 			}
 
@@ -176,15 +178,15 @@ namespace SharpSteer2
 		/// <param name="force"></param>
 		/// <param name="deltaTime"></param>
 		/// <returns></returns>
-		protected virtual Vector3 AdjustRawSteeringForce(Vector3 force, float deltaTime)
+		protected virtual FixMath.F64Vec3 AdjustRawSteeringForce(FixMath.F64Vec3 force, FixMath.F64 deltaTime)
 		{
-			float maxAdjustedSpeed = 0.2f * MaxSpeed;
+			var maxAdjustedSpeed = FixMath.F64.FromFloat(0.2f) * MaxSpeed;
 
-			if ((Speed > maxAdjustedSpeed) || (force == Vector3.Zero))
+			if ((Speed > maxAdjustedSpeed) || (force == FixMath.F64Vec3.Zero))
 				return force;
 
-            float range = Speed / maxAdjustedSpeed;
-            float cosine = Utilities.Lerp(1.0f, -1.0f, (float)Math.Pow(range, 20));
+            var range = Speed / maxAdjustedSpeed;
+            var cosine = Utilities.Lerp(FixMath.F64.One, -FixMath.F64.One, FixMath.F64.Pow(range, FixMath.F64.FromFloat(20)));
             return force.LimitMaxDeviationAngle(cosine, Forward);
 		}
 
@@ -193,10 +195,10 @@ namespace SharpSteer2
 		/// </summary>
 		/// <param name="rate"></param>
 		/// <param name="deltaTime"></param>
-	    public void ApplyBrakingForce(float rate, float deltaTime)
+	    public void ApplyBrakingForce(FixMath.F64 rate, FixMath.F64 deltaTime)
 		{
-			float rawBraking = Speed * rate;
-			float clipBraking = ((rawBraking < MaxForce) ? rawBraking : MaxForce);
+			var rawBraking = Speed * rate;
+			var clipBraking = ((rawBraking < MaxForce) ? rawBraking : MaxForce);
 			Speed = (Speed - (clipBraking * deltaTime));
 		}
 
@@ -205,55 +207,55 @@ namespace SharpSteer2
 		/// </summary>
 		/// <param name="predictionTime"></param>
 		/// <returns></returns>
-        public override Vector3 PredictFuturePosition(float predictionTime)
+        public override FixMath.F64Vec3 PredictFuturePosition(FixMath.F64 predictionTime)
 		{
 			return Position + (Velocity * predictionTime);
 		}
 
 		// get instantaneous curvature (since last update)
-	    protected float Curvature { get; private set; }
+	    protected FixMath.F64 Curvature { get; private set; }
 
 	    // get/reset smoothedCurvature, smoothedAcceleration and smoothedPosition
-		public float SmoothedCurvature
+		public FixMath.F64 SmoothedCurvature
 		{
 			get { return _smoothedCurvature; }
 		}
 
-	    private void ResetSmoothedCurvature(float value = 0)
+	    private void ResetSmoothedCurvature(FixMath.F64 value /*= 0*/)
 		{
-			_lastForward = Vector3.Zero;
-			_lastPosition = Vector3.Zero;
+			_lastForward = FixMath.F64Vec3.Zero;
+			_lastPosition = FixMath.F64Vec3.Zero;
 	        _smoothedCurvature = value;
             Curvature = value;
 		}
 
-		public override Vector3 Acceleration
+		public override FixMath.F64Vec3 Acceleration
 		{
 			get { return _acceleration; }
 		}
 
 	    protected void ResetAcceleration()
 	    {
-	        ResetAcceleration(Vector3.Zero);
+	        ResetAcceleration(FixMath.F64Vec3.Zero);
 	    }
 
-	    private void ResetAcceleration(Vector3 value)
+	    private void ResetAcceleration(FixMath.F64Vec3 value)
 	    {
 	        _acceleration = value;
 	    }
 
-        Vector3 _smoothedPosition;
-	    public Vector3 SmoothedPosition
+        FixMath.F64Vec3 _smoothedPosition;
+	    public FixMath.F64Vec3 SmoothedPosition
 		{
 			get { return _smoothedPosition; }
 		}
 
 	    private void ResetSmoothedPosition()
 	    {
-	        ResetSmoothedPosition(Vector3.Zero);
+	        ResetSmoothedPosition(FixMath.F64Vec3.Zero);
 	    }
 
-	    protected void ResetSmoothedPosition(Vector3 value)
+	    protected void ResetSmoothedPosition(FixMath.F64Vec3 value)
 	    {
 	        _smoothedPosition = value;
 	    }
@@ -262,22 +264,22 @@ namespace SharpSteer2
 		// rotate about it by a random angle (pick random forward, derive side).
 	    protected void RandomizeHeadingOnXZPlane()
 		{
-			Up = Vector3.UnitY;
+			Up = FixMath.F64Vec3.AxisY;
             Forward = Vector3Helpers.RandomUnitVectorOnXZPlane();
-	        Side = Vector3.Cross(Forward, Up);
+	        Side = FixMath.F64Vec3.Cross(Forward, Up);
 		}
 
 		// measure path curvature (1/turning-radius), maintain smoothed version
-		void MeasurePathCurvature(float elapsedTime)
+		void MeasurePathCurvature(FixMath.F64 elapsedTime)
 		{
 			if (elapsedTime > 0)
 			{
-				Vector3 dP = _lastPosition - Position;
-				Vector3 dF = (_lastForward - Forward) / dP.Length();
-                Vector3 lateral = Vector3Helpers.PerpendicularComponent(dF, Forward);
-                float sign = (Vector3.Dot(lateral, Side) < 0) ? 1.0f : -1.0f;
-				Curvature = lateral.Length() * sign;
-				Utilities.BlendIntoAccumulator(elapsedTime * 4.0f, Curvature, ref _smoothedCurvature);
+				var dP = _lastPosition - Position;
+				var dF = (_lastForward - Forward) / FixMath.F64Vec3.LengthFast(dP);
+                var lateral = Vector3Helpers.PerpendicularComponent(dF, Forward);
+                var sign = (FixMath.F64Vec3.Dot(lateral, Side) < 0) ? FixMath.F64.One : -FixMath.F64.One;
+				Curvature = FixMath.F64Vec3.LengthFast(lateral) * sign;
+				Utilities.BlendIntoAccumulator(elapsedTime * FixMath.F64.FromFloat(4.0f), Curvature, ref _smoothedCurvature);
 				_lastForward = Forward;
 				_lastPosition = Position;
 			}

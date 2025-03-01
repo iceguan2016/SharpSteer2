@@ -1,8 +1,4 @@
-using RGame.Framework;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace FixMath
 {
@@ -46,7 +42,19 @@ namespace FixMath
 	        }
         }
 
-        void SetIdentity()
+        public void SetScaledAxis(eAxis InAxis, FixMath.F64Vec3 InDir)
+        {
+            switch (InAxis )
+	        {
+	        case eAxis.X:
+		        { M00 = InDir.X; M10 = InDir.Y; M20 = InDir.Z; } break;
+	        case eAxis.Y:
+		        { M01 = InDir.X; M11 = InDir.Y; M21 = InDir.Z; } break;
+	        case eAxis.Z:
+		        { M02 = InDir.X; M12 = InDir.Y; M22 = InDir.Z; } break;
+        }
+
+        public void SetIdentity()
         {
             this[0, 0] = F64.One; this[0, 1] = F64.Zero; this[0, 2] = F64.Zero; this[0, 3] = F64.Zero;
             this[1, 0] = F64.Zero; this[1, 1] = F64.One; this[1, 2] = F64.Zero; this[1, 3] = F64.Zero;
@@ -54,11 +62,23 @@ namespace FixMath
             this[3, 0] = F64.Zero; this[3, 1] = F64.Zero; this[3, 2] = F64.Zero; this[3, 3] = F64.One;
         }
 
-        void SetBasis(F64Vec3 inX, F64Vec3 inY, F64Vec3 inZ)
+        public void SetBasis(F64Vec3 inX, F64Vec3 inY, F64Vec3 inZ)
         {
             this[0, 0] = inX[0];    this[0, 1] = inY[0];    this[0, 2] = inZ[0];
             this[1, 0] = inX[1];    this[1, 1] = inY[1];    this[1, 2] = inZ[1];
             this[2, 0] = inX[2];    this[2, 1] = inY[2];    this[2, 2] = inZ[2];
+        }
+
+        public void SetTranslation(F64Vec3 inTranlation)
+        {
+            this[0, 3] = inTranlation.X;
+            this[1, 3] = inTranlation.Y;
+            this[2, 3] = inTranlation.Z;
+        }
+
+        public F64Vec3 GetTranslation()
+        {
+            return new F64Vec3(this[0, 3], this[1, 3], this[2, 3]);
         }
 
         public F64 this[int i, int j] { 

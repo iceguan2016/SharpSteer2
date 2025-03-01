@@ -12,7 +12,7 @@ namespace SharpSteer2.Helpers
             get
             {
                 if (_rng == null)
-                    _rng = new Random();
+                    _rng = new Random(1234);
                 return _rng;
             }
         }
@@ -21,9 +21,10 @@ namespace SharpSteer2.Helpers
         /// Returns a float randomly distributed between 0 and 1
         /// </summary>
         /// <returns></returns>
-        public static float Random()
+        public static FixMath.F64 Random()
         {
-            return (float)rng.NextDouble();
+            return FixMath.F64.Half;
+            // return (float)rng.NextDouble();
         }
 
         /// <summary>
@@ -32,14 +33,14 @@ namespace SharpSteer2.Helpers
         /// <param name="lowerBound"></param>
         /// <param name="upperBound"></param>
         /// <returns></returns>
-        public static float Random(float lowerBound, float upperBound)
+        public static FixMath.F64 Random(FixMath.F64 lowerBound, FixMath.F64 upperBound)
         {
             return lowerBound + (Random() * (upperBound - lowerBound));
         }
 
         public static int RandomInt(int min, int max)
         {
-            return (int)Random(min, max);
+            return min + FixMath.F64.FloorToInt(Random() * (max - min));
         }
     }
 }
