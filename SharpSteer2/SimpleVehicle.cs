@@ -36,13 +36,13 @@ namespace SharpSteer2
 			ResetLocalSpace();
 
 			Mass = FixMath.F64.One;          // Mass (defaults to 1 so acceleration=force)
-			Speed = 0;         // speed along Forward direction.
+			Speed = FixMath.F64.Zero;         // speed along Forward direction.
 
-			Radius = 0.5f;     // size of bounding sphere
+			Radius = FixMath.F64.Half;     // size of bounding sphere
 
 			// reset bookkeeping to do running averages of these quanities
 			ResetSmoothedPosition();
-			ResetSmoothedCurvature();
+			ResetSmoothedCurvature(FixMath.F64.Zero);
 			ResetAcceleration();
 		}
 
@@ -110,7 +110,7 @@ namespace SharpSteer2
             newVelocity = newVelocity.TruncateLength(MaxSpeed);
 
 			// update Speed
-			Speed = (newVelocity.Length());
+			Speed = (FixMath.F64Vec3.LengthFast(newVelocity));
 
 			// Euler integrate (per frame) velocity into position
 			Position = (Position + (newVelocity * elapsedTime));
@@ -123,14 +123,14 @@ namespace SharpSteer2
 			MeasurePathCurvature(elapsedTime);
 
 			// running average of recent positions
-			Utilities.BlendIntoAccumulator(elapsedTime * 0.06f, // QQQ
+			Utilities.BlendIntoAccumulator(elapsedTime * FixMath.F64.FromFloat(0.06f), // QQQ
 								  Position,
 								  ref _smoothedPosition);
 		}
 
 		// the default version: keep FORWARD parallel to velocity, change
 		// UP as little as possible.
-	    protected virtual void RegenerateLocalSpace(Vector3 newVelocity, float elapsedTime)
+	    protected virtual void RegenerateLocalSpace(FixMath.F64Vec3 newVelocity, FixMath.F64 elapsedTime)
 		{
 			// adjust orthonormal basis vectors to be aligned with new velocity
 			if (Speed > 0)
@@ -142,29 +142,30 @@ namespace SharpSteer2
 		// alternate version: keep FORWARD parallel to velocity, adjust UP
 		// according to a no-basis-in-reality "banking" behavior, something
 		// like what birds and airplanes do.  (XXX experimental cwr 6-5-03)
-	    protected void RegenerateLocalSpaceForBanking(Vector3 newVelocity, float elapsedTime)
+	    protected void RegenerateLocalSpaceForBanking(FixMath.F64Vec3 newVelocity, FixMath.F64 elapsedTime)
 		{
 			// the length of this global-upward-pointing vector controls the vehicle's
 			// tendency to right itself as it is rolled over from turning acceleration
-			Vector3 globalUp = new Vector3(0, 0.2f, 0);
+			var globalUp = FixMath.F64Vec3.FromFloat(0, 0.2f, 0);
 
 			// acceleration points toward the center of local path curvature, the
 			// length determines how much the vehicle will roll while turning
-			Vector3 accelUp = _acceleration * 0.05f;
+			var accelUp = _acceleration * FixMath.F64.FromFloat(0.05f);
 
 			// combined banking, sum of UP due to turning and global UP
-			Vector3 bankUp = accelUp + globalUp;
+			var bankUp = accelUp + globalUp;
 
 			// blend bankUp into vehicle's UP basis vector
-			float smoothRate = elapsedTime * 3;
-			Vector3 tempUp = Up;
+			var smoothRate = elapsedTime * 3;
+			var tempUp = Up;
 			Utilities.BlendIntoAccumulator(smoothRate, bankUp, ref tempUp);
-			Up = Vector3.Normalize(tempUp);
+			Up = FixMath.F64Vec3.NormalizeFast(tempUp);
 
-			annotation.Line(Position, Position + (globalUp * 4), Colors.White);
-	        annotation.Line(Position, Position + (bankUp * 4), Colors.Orange);
-			annotation.Line(Position, Position + (accelUp * 4), Colors.Red);
-	        annotation.Line(Position, Position + (Up * 1), Colors.Gold);
+			var AxisScale = FixMath.F64.FromInt(4);
+            annotation.Line(Position, Position + (globalUp * AxisScale), Colors.White, FixMath.F64.One);
+	        annotation.Line(Position, Position + (bankUp * AxisScale), Colors.Orange, FixMath.F64.One);
+			annotation.Line(Position, Position + (accelUp * AxisScale), Colors.Red, FixMath.F64.One);
+	        annotation.Line(Position, Position + (Up * FixMath.F64.One), Colors.Gold, FixMath.F64.One);
 
 			// adjust orthonormal basis vectors to be aligned with new velocity
 			if (Speed > 0) RegenerateOrthonormalBasisUF(newVelocity / Speed);

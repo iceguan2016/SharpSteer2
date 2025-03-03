@@ -33,14 +33,14 @@ namespace SharpSteer2
 		public virtual void Reset()
 		{
 			// initial state of wander behavior
-			_wanderSide = 0;
-			_wanderUp = 0;
+			_wanderSide = FixMath.F64.Zero;
+			_wanderUp = FixMath.F64.Zero;
 		}
 
         #region steering behaviours
-	    private float _wanderSide;
-	    private float _wanderUp;
-	    protected FixMath.F64Vec3 SteerForWander(float dt)
+	    private FixMath.F64 _wanderSide;
+	    private FixMath.F64 _wanderUp;
+	    protected FixMath.F64Vec3 SteerForWander(FixMath.F64 dt)
 	    {
 	        return this.SteerForWander(dt, ref _wanderSide, ref _wanderUp);
 	    }

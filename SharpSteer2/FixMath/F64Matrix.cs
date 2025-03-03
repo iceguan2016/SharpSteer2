@@ -52,6 +52,8 @@ namespace FixMath
 		        { M01 = InDir.X; M11 = InDir.Y; M21 = InDir.Z; } break;
 	        case eAxis.Z:
 		        { M02 = InDir.X; M12 = InDir.Y; M22 = InDir.Z; } break;
+            default: break;
+            }
         }
 
         public void SetIdentity()
@@ -231,7 +233,7 @@ namespace FixMath
 
                 fRoot = F64.Sqrt(this[i, i] - this[j, j] - this[k, k] + F64.One);
                 F64[] apkQuat = new F64[3];
-                Common.DebugUtils.Assert(fRoot > F64.Zero);
+                // Common.DebugUtils.Assert(fRoot > F64.Zero);
                 apkQuat[i] = F64.Half * fRoot;
                 fRoot = F64.Half / fRoot;
                 q.W = (this[k, j] - this[j, k]) * fRoot;

@@ -23,9 +23,6 @@
 //
 using FixPointCS;
 using System;
-using Unity.VisualScripting;
-using UnityEngine;
-using static UnityEngine.Rendering.DebugUI.Table;
 
 namespace FixMath
 {
